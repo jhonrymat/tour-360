@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Oculus Go - Point And Click Using laser-controls</title>
+    <link id="favicon" rel="icon" href="https://glitch.com/edit/favicon-app.ico" type="image/x-icon">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+
+    <script>
+      AFRAME.registerComponent("basic-interactions", {
+        init: function () {
+          var el = this.el;
+
+          el.addEventListener("mouseenter", function () {
+            el.setAttribute("material", "color", "#AA0000");
+          });
+          el.addEventListener("mouseleave", function () {
+            el.setAttribute("material", "color", "#FFFFFF");
+          });
+
+          // TRIGGER BUTTON DOWN
+          el.addEventListener("mousedown", function () {
+            el.setAttribute("material", "color", "#FFAA00");
+          });
+          // TRIGGER BUTTON UP
+          el.addEventListener("mouseup", function () {
+            el.setAttribute("material", "color", "#AA0000");
+          });
+        },
+      });
+    </script>
+    <script>
+      AFRAME.registerComponent("hotspots", {
+        init: function () {
+          this.el.addEventListener("reloadspots", function (evt) {
+            //get the entire current spot group and scale it to 0
+            var currspotgroup = document.getElementById(evt.detail.currspots);
+            currspotgroup.setAttribute("scale", "0 0 0");
+
+            //get the entire new spot group and scale it to 1
+            var newspotgroup = document.getElementById(evt.detail.newspots);
+            newspotgroup.setAttribute("scale", "1 1 1");
+          });
+        },
+      });
+      AFRAME.registerComponent("spot", {
+        schema: {
+          linkto: { type: "string", default: "" },
+          spotgroup: { type: "string", default: "" },
+        },
+        init: function () {
+          //add image source of hotspot icon
+          this.el.setAttribute("src", "#hotspot");
+          //make the icon look at the camera all the time
+          this.el.setAttribute("look-at", "#cameraRig");
+
+          var data = this.data;
+
+          this.el.addEventListener("click", function () {
+            //set the skybox source to the new image as per the spot
+            var sky = document.getElementById("skybox");
+            sky.setAttribute("src", data.linkto);
+
+            var spotcomp = document.getElementById("spots");
+            var currspots = this.parentElement.getAttribute("id");
+            //create event for spots component to change the spots data
+            spotcomp.emit("reloadspots", {
+              newspots: data.spotgroup,
+              currspots: currspots,
+            });
+          });
+        },
+      });
+    </script>
+  </head>
+
+  <body>
+    <a-scene background="color: red" renderer="antialias: true" inspector="url: https://cdn.jsdelivr.net/gh/aframevr/aframe-inspector@master/dist/aframe-inspector.min.js">
+      <a-assets>
+        <img
+          id="point1"
+          crossorigin="anonymous"
+          src="https://cdn.glitch.global/5efc2f0d-5acd-40c2-a117-4b75ad67ef4a/ofi.ini.jpg?v=1674787212957"
+        />
+        <img
+          id="point2"
+          crossorigin="anonymous"
+          src="https://cdn.glitch.global/5efc2f0d-5acd-40c2-a117-4b75ad67ef4a/ofi-entrada.jpg?v=1674788150223"
+        />
+        <img
+          id="hotspot"
+          crossorigin="anonymous"
+          src="https://cdn.glitch.global/5efc2f0d-5acd-40c2-a117-4b75ad67ef4a/navigation.svg?v=1674791531124"
+        />
+      </a-assets>
+      <!-- puntos guias-->
+      <a-entity id="spots" hotspots>
+        <a-entity id="group-point1">
+          <a-image
+            id="1"
+            spot="linkto:#point2;spotgroup:group-point2"
+            position="9 1.195 3"
+            rotation="0 90 0"
+            basic-interactions
+            animation="property: position; to: 9 1.5 3;  dir: alternate; dur: 1000; easing: linear; loop: true" 
+          ></a-image>          
+        </a-entity>
+        <a-entity id="group-point2" scale="0 0 0">
+          <a-image
+            id="2"
+            spot="linkto:#point1;spotgroup:group-point1"
+            position="-9 0 5"
+            rotation="0 90 0"
+            basic-interactions
+            animation="property: position; to: 9 1.5 3; dir: alternate; dur: 1000; easing: linear; loop: true" 
+          ></a-image>
+        </a-entity>
+      </a-entity>
+      <!-- CAMERA RIG -->
+      <a-entity position="0 0 4" rotation="0 -90 0">
+        <!-- CAMERA -->
+        <a-camera></a-camera>
+        <a-entity laser-controls="hand: right"></a-entity>
+        <a-entity laser-controls="hand: left"></a-entity>
+      </a-entity>
+
+      <a-sky id="skybox" src="#point1"></a-sky>
+      <!-- BASIC INTERACTIONS ON MOUSEENTER, MOUSELEAVE, MOUSEDOWN, MOUSEUP -->
+      <!--<a-box position="0 0.5 0" basic-interactions></a-box>-->
+    </a-scene>
+  </body>
+</html>
